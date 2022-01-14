@@ -1,0 +1,4291 @@
+openapi: 3.0.3
+info:
+  x-logo:
+    url: 'https://docs.chainstack.com/img/api-docs-logo.svg'
+    backgroundColor: '#F5F8FC'
+    altText: Chainstack
+  title: Chainstack API
+  version: v1
+  contact:
+    name: API Support
+    email: support@chainstack.com
+  description: |
+    A set of API endpoints to operate and manage the platform resources.<br>
+    See also a [quick API tutorial](/api/quick-tutorial).
+paths:
+  /v1/applications/:
+    get:
+      operationId: listAllApplications
+      summary: List all Applications
+      description: 'List all [applications](/glossary/application).'
+      parameters:
+        - $ref: '#/components/parameters/ApplicationOrdering'
+        - $ref: '#/components/parameters/Pagination'
+        - $ref: '#/components/parameters/NodeIdFilter'
+        - $ref: '#/components/parameters/ApplicationStatusFilter'
+      tags:
+        - Application
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Application'
+              examples:
+                list:
+                  value:
+                    count: 2
+                    next: null
+                    previous: null
+                    results:
+                      - id: CA-123-456-789
+                        name: My CorDapp
+                        status: installed
+                        type: cordapp
+                        configuration:
+                          node: ND-123-456-789
+                        details:
+                          cordapp_type: workflow
+                          version: 1579870483
+                          manifest:
+                            Sealed: true
+                            Manifest-Version: 1
+                            Min-Platform-Version: 4
+                            Cordapp-Workflow-Name: My workflow
+                            Cordapp-Workflow-Vendor: Chainstack
+                            Target-Platform-Version: 4
+                            Cordapp-Workflow-Licence: 'Apache License, Version 2.0'
+                            Cordapp-Workflow-Version: 123456789
+                        created_at: 2020-06-15T07:38:00.747Z
+                        creator:
+                          id: UR-111-111-111
+                          email: john.smith@example.com
+                          first_name: John
+                          last_name: Smith
+                          organization:
+                            id: RG-123-456
+                            name: My organization
+                      - id: CA-111-222-333
+                        name: My combined CorDapp
+                        status: installed
+                        type: cordapp
+                        configuration:
+                          node: ND-111-222-333
+                        details:
+                          cordapp_type: combined
+                          version: ''
+                          manifest:
+                            Sealed: true
+                            Manifest-Version: 1
+                            Min-Platform-Version: 4
+                            Cordapp-Contract-Name: Contract
+                            Cordapp-Workflow-Name: Workflow
+                            Cordapp-Contract-Vendor: Chainstack
+                            Cordapp-Workflow-Vendor: Chainstack
+                            Target-Platform-Version: 4
+                            Cordapp-Contract-Licence: 'Apache License, Version 2.0'
+                            Cordapp-Contract-Version: 1
+                            Cordapp-Workflow-Licence": 'Apache License, Version 2.0'
+                            Cordapp-Workflow-Version: 1
+                          entries:
+                            - name: Contract
+                              version: 1
+                              cordapp_type: contract
+                            - name: Workflow
+                              version: 1
+                              cordapp_type: workflow
+                        created_at: 2020-06-15T07:38:00.747Z
+                        creator:
+                          id: UR-111-111-111
+                          email: john.smith@example.com
+                          first_name: John
+                          last_name: Smith
+                          organization:
+                            id: RG-123-456
+                            name: My organization
+          description: ''
+    post:
+      operationId: createApplication
+      summary: Create Application
+      description: Create an application.
+      tags:
+        - Application
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApplicationCreate'
+        required: true
+      x-codeSamples:
+        - lang: cURL
+          source: >
+            curl --location --request POST
+            'https://api.chainstack.com/public/v1/applications' \
+
+            --header 'Authorization: Bearer
+            FX7CWlLg.FMpAO8cgCX2N7s41EncRru2nb5CmTZUt' \
+
+            --form 'type="cordapp"' \
+
+            --form 'configuration.node="ND-123-456-789"' \
+
+            --form 'configuration.cordapp_file=@"./heartbeat-1.0.jar"'
+      security:
+        - API Key Authentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+              examples:
+                cordapp:
+                  $ref: '#/components/examples/CordaApplication'
+                cordapp (cordapp_type=combined):
+                  $ref: '#/components/examples/CordaApplicationCombined'
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  '/v1/applications/{id}/':
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: retrieveApplication
+      summary: Retrieve Application
+      description: Retrieve application details.
+      tags:
+        - Application
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+              examples:
+                cordapp:
+                  $ref: '#/components/examples/CordaApplication'
+                cordapp (cordapp_type=combined):
+                  $ref: '#/components/examples/CordaApplicationCombined'
+          description: ''
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      operationId: deleteApplication
+      summary: Delete Application
+      description: Delete the application.
+      tags:
+        - Application
+      security:
+        - API Key Authentication: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /v1/organization/:
+    get:
+      operationId: getOrganizatonInfo
+      summary: Get Organization name and ID
+      description: 'Get the name and ID of your [organization](/glossary/organization).'
+      tags:
+        - Organization
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+              examples:
+                organization:
+                  value:
+                    id: RG-123-456
+                    name: My organization
+          description: ''
+    patch:
+      operationId: updateOrganizationInfo
+      summary: Update Organization name
+      description: Change the name of your organization.
+      tags:
+        - Organization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationUpdate'
+            examples:
+              organization:
+                value:
+                  name: My organization
+        required: true
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+              examples:
+                organization:
+                  value:
+                    id: RG-123-456
+                    name: My organization
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /v1/projects/:
+    get:
+      operationId: listAllProjects
+      summary: List all Projects
+      description: 'List all [projects](/glossary/project) your organization is part of.'
+      parameters:
+        - $ref: '#/components/parameters/ProjectOrdering'
+        - $ref: '#/components/parameters/Pagination'
+        - $ref: '#/components/parameters/OrganizationIdFilter'
+        - $ref: '#/components/parameters/NameFilter'
+        - $ref: '#/components/parameters/ProjectTypeFilter'
+      tags:
+        - Project
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Project'
+              examples:
+                list:
+                  value:
+                    count: 1
+                    next: null
+                    previous: null
+                    results:
+                      - id: PR-123-456
+                        name: My consortium project
+                        description: My consortium project description
+                        type: consortium
+                        members: 1
+                        networks: 0
+                        created_at: 2020-06-15T07:38:00.747Z
+                        creator:
+                          id: UR-111-111-111
+                          email: john.smith@example.com
+                          first_name: John
+                          last_name: Smith
+                          organization:
+                            id: RG-123-456
+                            name: My organization
+          description: ''
+    post:
+      operationId: createProject
+      summary: Create Project
+      description: Create a project.
+      tags:
+        - Project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+            examples:
+              consortium:
+                $ref: '#/components/examples/ConsortiumProjectCreate'
+              public chain:
+                $ref: '#/components/examples/PublicProjectCreate'
+        required: true
+      security:
+        - API Key Authentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+              examples:
+                consortium:
+                  $ref: '#/components/examples/ConsortiumProject'
+                public chain:
+                  $ref: '#/components/examples/PublicProject'
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  '/v1/projects/{id}/':
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: retrieveProject
+      summary: Retrieve Project
+      description: Retrieve the project details.
+      tags:
+        - Project
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+              examples:
+                consortium:
+                  $ref: '#/components/examples/ConsortiumProject'
+                public chain:
+                  $ref: '#/components/examples/PublicProject'
+          description: ''
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateProject
+      summary: Update Project
+      description: Change project name and project description.
+      tags:
+        - Project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+            examples:
+              project:
+                value:
+                  name: My new project name
+                  description: My new project description
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+              examples:
+                consortium:
+                  $ref: '#/components/examples/ConsortiumProject'
+                public chain:
+                  $ref: '#/components/examples/PublicProject'
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      operationId: deleteProject
+      summary: Delete Project
+      description: Delete the project.
+      tags:
+        - Project
+      security:
+        - API Key Authentication: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  '/v1/projects/{id}/members/':
+    get:
+      operationId: retrieveProjectMembers
+      summary: Retrieve Project members
+      description: Retrieve members of a consortium project.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - $ref: '#/components/parameters/Pagination'
+      tags:
+        - Project
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProjectMember'
+              examples:
+                list:
+                  value:
+                    count: 1
+                    next: null
+                    previous: null
+                    results:
+                      - id: RG-123-456
+                        name: My organization
+                        email: john.smith@example.com
+          description: ''
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /v1/networks/:
+    get:
+      operationId: listAllNetworks
+      summary: List all Networks
+      description: 'List all [networks](/glossary/network) your organization is part of.'
+      parameters:
+        - $ref: '#/components/parameters/NetworkOrdering'
+        - $ref: '#/components/parameters/Pagination'
+        - $ref: '#/components/parameters/ProjectIdFilter'
+        - $ref: '#/components/parameters/NameFilter'
+        - $ref: '#/components/parameters/ConsensusFilter'
+        - $ref: '#/components/parameters/PublicNetworkNameFilter'
+        - $ref: '#/components/parameters/NetworkStatusFilter'
+        - $ref: '#/components/parameters/ProtocolFilter'
+        - $ref: '#/components/parameters/NetworkProjectTypeFilter'
+      tags:
+        - Network
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Network'
+              examples:
+                list:
+                  value:
+                    count: 1
+                    next: null
+                    previous: null
+                    results:
+                      - id: NW-123-456-7
+                        name: My Corda network
+                        description: My Corda network description
+                        project: PR-123-456
+                        protocol: corda
+                        configuration:
+                          consensus: single-notary
+                        details: {}
+                        status: ok
+                        nodes:
+                          - id: ND-123-456-789
+                            name: My Corda node
+                            network: NW-123-456-7
+                            organization: RG-123-456
+                            type: dedicated
+                            role: peer
+                            provider: gcloud
+                            region: asia-southeast1
+                            status: running
+                            configuration: {}
+                            details:
+                              version: 4.4
+                              legal_name: >-
+                                OU=RG-123-456-ND-123-456-789,O=RG-123-456,C=SG,L=Singapore,ST=Singapore
+                              rpc_hostname: nd-003-319-498.rg-855-124.p2pify.com
+                              rpc_port: 10201
+                              rpc_username: user-name
+                              rpc_password: pass-word-pass-word-pass-word
+                            created_at: 2020-06-15T07:38:00.747Z
+                            creator:
+                              id: UR-111-111-111
+                              email: john.smith@example.com
+                              first_name: John
+                              last_name: Smith
+                              organization:
+                                id: RG-123-456
+                                name: My organization
+                          - id: ND-123-456-780
+                            name: Network Map Service
+                            network: NW-123-456-7
+                            organization: RG-123-456
+                            type: dedicated
+                            role: nms
+                            provider: gcloud
+                            region: asia-southeast1
+                            status: running
+                            configuration: {}
+                            details:
+                              version: 0.5.1
+                              url: 'https://nd-123-456-780.p2pify.com'
+                            created_at: 2020-06-15T07:38:00.747Z
+                            creator:
+                              id: UR-111-111-111
+                              email: john.smith@example.com
+                              first_name: John
+                              last_name: Smith
+                              organization:
+                                id: RG-123-456
+                                name: My organization
+                          - id: ND-123-456-781
+                            name: Notary
+                            network: NW-123-456-7
+                            organization: RG-123-456
+                            type: dedicated
+                            role: notary
+                            provider: gcloud
+                            region: asia-southeast1
+                            status: running
+                            configuration: {}
+                            details:
+                              version: 4.4
+                              legal_name: >-
+                                OU=RG-123-456-ND-123-456-781,O=RG-123-456,C=SG,L=Singapore,ST=Singapore
+                            created_at: 2020-06-15T07:38:00.747Z
+                            creator:
+                              id: UR-111-111-111
+                              email: john.smith@example.com
+                              first_name: John
+                              last_name: Smith
+                              organization:
+                                id: RG-123-456
+                                name: My organization
+                        created_at: 2020-06-15T07:38:00.747Z
+                        creator:
+                          id: UR-111-111-111
+                          email: john.smith@example.com
+                          first_name: John
+                          last_name: Smith
+                          organization:
+                            id: RG-123-456
+                            name: My organization
+          description: ''
+    post:
+      operationId: createNetwork
+      summary: Create Network
+      description: Create a network.
+      tags:
+        - Network
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkCreate'
+            examples:
+              hyperledger fabric:
+                $ref: '#/components/examples/FabricNetworkCreate'
+              corda:
+                $ref: '#/components/examples/CordaNetworkCreate'
+              quorum:
+                $ref: '#/components/examples/QuorumNetworkCreate'
+              multichain:
+                $ref: '#/components/examples/MultiChainNetworkCreate'
+              ethereum:
+                $ref: '#/components/examples/EthereumNetworkCreate'
+              polygon pos:
+                $ref: '#/components/examples/PolygonPoSNetworkCreate'
+              bsc:
+                $ref: '#/components/examples/BinanceSmartChainNetworkCreate'
+              bitcoin:
+                $ref: '#/components/examples/BitcoinNetworkCreate'
+              public corda:
+                $ref: '#/components/examples/CordaPublicNetworkCreate'
+        required: true
+      security:
+        - API Key Authentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Network'
+              examples:
+                hyperledger fabric:
+                  $ref: '#/components/examples/FabricNetwork'
+                corda:
+                  $ref: '#/components/examples/CordaNetwork'
+                quorum:
+                  $ref: '#/components/examples/QuorumNetwork'
+                multichain:
+                  $ref: '#/components/examples/MultiChainNetwork'
+                ethereum:
+                  $ref: '#/components/examples/EthereumNetwork'
+                polygon pos:
+                  $ref: '#/components/examples/PolygonPoSNetwork'
+                bsc:
+                  $ref: '#/components/examples/BinanceSmartChainNetwork'
+                bitcoin:
+                  $ref: '#/components/examples/BitcoinNetwork'
+                public corda:
+                  $ref: '#/components/examples/CordaPublicNetwork'
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  '/v1/networks/{id}/':
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: retrieveNetwork
+      summary: Retrieve Network
+      description: Retrieve network details.
+      tags:
+        - Network
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Network'
+              examples:
+                hyperledger fabric:
+                  $ref: '#/components/examples/FabricNetwork'
+                corda:
+                  $ref: '#/components/examples/CordaNetwork'
+                quorum:
+                  $ref: '#/components/examples/QuorumNetwork'
+                multichain:
+                  $ref: '#/components/examples/MultiChainNetwork'
+                ethereum:
+                  $ref: '#/components/examples/EthereumNetwork'
+                polygon pos:
+                  $ref: '#/components/examples/PolygonPoSNetwork'
+                bsc:
+                  $ref: '#/components/examples/BinanceSmartChainNetwork'
+                bitcoin:
+                  $ref: '#/components/examples/BitcoinNetwork'
+                public corda:
+                  $ref: '#/components/examples/CordaPublicNetwork'
+          description: ''
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateNetwork
+      summary: Update Network
+      description: Change the network name. Only for `consortium` projects.
+      tags:
+        - Network
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkUpdate'
+            examples:
+              network:
+                value:
+                  name: My new network name
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Network'
+              examples:
+                hyperledger fabric:
+                  $ref: '#/components/examples/FabricNetwork'
+                corda:
+                  $ref: '#/components/examples/CordaNetwork'
+                quorum:
+                  $ref: '#/components/examples/QuorumNetwork'
+                multichain:
+                  $ref: '#/components/examples/MultiChainNetwork'
+                ethereum:
+                  $ref: '#/components/examples/EthereumNetwork'
+                polygon pos:
+                  $ref: '#/components/examples/PolygonPoSNetwork'
+                bsc:
+                  $ref: '#/components/examples/BinanceSmartChainNetwork'
+                bitcoin:
+                  $ref: '#/components/examples/BitcoinNetwork'
+                public corda:
+                  $ref: '#/components/examples/CordaPublicNetwork'
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      operationId: deleteNetwork
+      summary: Delete Network
+      description: Delete the network.
+      tags:
+        - Network
+      security:
+        - API Key Authentication: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /v1/nodes/:
+    get:
+      operationId: listAllNodes
+      summary: List all Nodes
+      description: >-
+        List all [nodes](/glossary/node) in the networks your organization is
+        part of.
+      parameters:
+        - $ref: '#/components/parameters/NodeOrdering'
+        - $ref: '#/components/parameters/Pagination'
+        - $ref: '#/components/parameters/ProjectIdFilter'
+        - $ref: '#/components/parameters/OrganizationIdFilter'
+        - $ref: '#/components/parameters/NetworkIdFilter'
+        - $ref: '#/components/parameters/RegionFilter'
+        - $ref: '#/components/parameters/ProviderFilter'
+        - $ref: '#/components/parameters/ProtocolFilter'
+        - $ref: '#/components/parameters/NodeStatusFilter'
+        - $ref: '#/components/parameters/NodeRoleFilter'
+        - $ref: '#/components/parameters/NodeTypeFilter'
+        - $ref: '#/components/parameters/ArchiveFilter'
+        - $ref: '#/components/parameters/IdentityIdFilter'
+        - $ref: '#/components/parameters/PublicNetworkNameFilter'
+        - $ref: '#/components/parameters/NameFilter'
+        - $ref: '#/components/parameters/NetworkProjectTypeFilter'
+      tags:
+        - Node
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Node'
+              examples:
+                list:
+                  value:
+                    count: 1
+                    next: null
+                    previous: null
+                    results:
+                      - id: ND-123-456-789
+                        name: My Corda node
+                        network: NW-123-456-7
+                        organization: RG-123-456
+                        type: dedicated
+                        role: peer
+                        provider: gcloud
+                        region: asia-southeast1
+                        status: running
+                        configuration: {}
+                        details: {}
+                        created_at: 2020-06-15T07:38:00.747Z
+                        creator:
+                          id: UR-111-111-111
+                          email: john.smith@example.com
+                          first_name: John
+                          last_name: Smith
+                          organization:
+                            id: RG-123-456
+                            name: My organization
+          description: ''
+    post:
+      operationId: createNode
+      summary: Create Node
+      description: Create Node
+      tags:
+        - Node
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeCreate'
+            examples:
+              hyperledger fabric:
+                $ref: '#/components/examples/FabricNodeCreate'
+              corda:
+                $ref: '#/components/examples/CordaNodeCreate'
+              quorum:
+                $ref: '#/components/examples/QuorumNodeCreate'
+              multichain:
+                $ref: '#/components/examples/MultiChainNodeCreate'
+              ethereum:
+                $ref: '#/components/examples/EthereumNodeCreate'
+              polygon pos:
+                $ref: '#/components/examples/PolygonPoSNodeCreate'
+              bsc:
+                $ref: '#/components/examples/BinanceSmartChainNodeCreate'
+              bitcoin:
+                $ref: '#/components/examples/BitcoinNodeCreate'
+              public corda:
+                $ref: '#/components/examples/CordaPublicNodeCreate'
+        required: true
+      security:
+        - API Key Authentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+              examples:
+                hyperledger fabric:
+                  $ref: '#/components/examples/FabricNode'
+                hyperledger fabric orderer:
+                  $ref: '#/components/examples/FabricOrdererNode'
+                corda:
+                  $ref: '#/components/examples/CordaNode'
+                corda nms:
+                  $ref: '#/components/examples/CordaNMSNode'
+                corda notary:
+                  $ref: '#/components/examples/CordaNotaryNode'
+                quorum:
+                  $ref: '#/components/examples/QuorumNode'
+                multichain:
+                  $ref: '#/components/examples/MultiChainNode'
+                ethereum:
+                  $ref: '#/components/examples/EthereumNode'
+                polygon pos:
+                  $ref: '#/components/examples/PolygonPoSNode'
+                bsc:
+                  $ref: '#/components/examples/BinanceSmartChainNode'
+                bitcoin:
+                  $ref: '#/components/examples/BitcoinNode'
+                public corda:
+                  $ref: '#/components/examples/CordaPublicNode'
+                explorer:
+                  $ref: '#/components/examples/ExplorerNode'
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  '/v1/nodes/{id}/':
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: retrieveNode
+      summary: Retrieve Node
+      description: Retrieve node details.
+      tags:
+        - Node
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+              examples:
+                hyperledger fabric:
+                  $ref: '#/components/examples/FabricNode'
+                hyperledger fabric orderer:
+                  $ref: '#/components/examples/FabricOrdererNode'
+                corda:
+                  $ref: '#/components/examples/CordaNode'
+                corda nms:
+                  $ref: '#/components/examples/CordaNMSNode'
+                corda notary:
+                  $ref: '#/components/examples/CordaNotaryNode'
+                quorum:
+                  $ref: '#/components/examples/QuorumNode'
+                multichain:
+                  $ref: '#/components/examples/MultiChainNode'
+                ethereum:
+                  $ref: '#/components/examples/EthereumNode'
+                polygon pos:
+                  $ref: '#/components/examples/PolygonPoSNode'
+                bsc:
+                  $ref: '#/components/examples/BinanceSmartChainNode'
+                bitcoin:
+                  $ref: '#/components/examples/BitcoinNode'
+                public corda:
+                  $ref: '#/components/examples/CordaPublicNode'
+                explorer:
+                  $ref: '#/components/examples/ExplorerNode'
+          description: ''
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateNode
+      summary: Update Node
+      description: Change the node name.
+      tags:
+        - Node
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeUpdate'
+            examples:
+              node:
+                value:
+                  name: My new node name
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Node'
+              examples:
+                hyperledger fabric:
+                  $ref: '#/components/examples/FabricNode'
+                hyperledger fabric orderer:
+                  $ref: '#/components/examples/FabricOrdererNode'
+                corda:
+                  $ref: '#/components/examples/CordaNode'
+                corda nms:
+                  $ref: '#/components/examples/CordaNMSNode'
+                corda notary:
+                  $ref: '#/components/examples/CordaNotaryNode'
+                quorum:
+                  $ref: '#/components/examples/QuorumNode'
+                multichain:
+                  $ref: '#/components/examples/MultiChainNode'
+                ethereum:
+                  $ref: '#/components/examples/EthereumNode'
+                polygon pos:
+                  $ref: '#/components/examples/PolygonPoSNode'
+                bsc:
+                  $ref: '#/components/examples/BinanceSmartChainNode'
+                bitcoin:
+                  $ref: '#/components/examples/BitcoinNode'
+                public corda:
+                  $ref: '#/components/examples/CordaPublicNode'
+                explorer:
+                  $ref: '#/components/examples/ExplorerNode'
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      operationId: deleteNode
+      summary: Delete Node
+      description: Delete the node.
+      tags:
+        - Node
+      security:
+        - API Key Authentication: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /v1/identities/:
+    get:
+      operationId: listAllIdentities
+      summary: List all Identities
+      description: 'List all [identities](/glossary/identity) of your organization.'
+      parameters:
+        - $ref: '#/components/parameters/IdentityOrdering'
+        - $ref: '#/components/parameters/Pagination'
+        - $ref: '#/components/parameters/IdentityProtocolFilter'
+        - $ref: '#/components/parameters/IdentityStatusFilter'
+        - $ref: '#/components/parameters/NameFilter'
+      tags:
+        - Identity
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Pagination'
+                  - type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Identity'
+              examples:
+                list:
+                  value:
+                    count: 1
+                    next: null
+                    previous: null
+                    results:
+                      - id: ID-123-456-7
+                        name: Acme
+                        organization: RG-123-456
+                        protocol: corda
+                        configuration:
+                          issuer: corda-network-uat
+                          node_operator_email: chainstack@example.com
+                          legal_name: 'OU=Acme,C=SG,L=Singapore,O=Acme'
+                        details:
+                          keystore_password: gaffe-clasp-copier-uneasy-comic-liver
+                          truststore_password: trustpass
+                        status: approved
+                        rejection_reason: ''
+                        created_at: 2020-06-15T07:38:00.747Z
+                        creator:
+                          id: UR-111-111-111
+                          email: john.smith@example.com
+                          first_name: John
+                          last_name: Smith
+                          organization:
+                            id: RG-123-456
+                            name: My organization
+          description: ''
+    post:
+      operationId: createIdentity
+      summary: Create Identity
+      description: Create an identity.
+      tags:
+        - Identity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityCreate'
+            examples:
+              public corda:
+                $ref: '#/components/examples/CordaPublicIdentityCreate'
+        required: true
+      security:
+        - API Key Authentication: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+              examples:
+                approved corda identity:
+                  $ref: '#/components/examples/CordaPublicIdentity'
+                rejected corda identity:
+                  $ref: '#/components/examples/RejectedCordaPublicIdentity'
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  '/v1/identities/{id}/':
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: retrieveIdentity
+      summary: Retrieve Identity
+      description: Retrieve the identity details.
+      tags:
+        - Identity
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+              examples:
+                approved corda identity:
+                  $ref: '#/components/examples/CordaPublicIdentity'
+                rejected corda identity:
+                  $ref: '#/components/examples/RejectedCordaPublicIdentity'
+          description: ''
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateIdentity
+      summary: Update Identity
+      description: Change the identity name.
+      tags:
+        - Identity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityUpdate'
+            examples:
+              identity:
+                value:
+                  name: My New Name
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Identity'
+              examples:
+                approved corda identity:
+                  $ref: '#/components/examples/CordaPublicIdentity'
+                rejected corda identity:
+                  $ref: '#/components/examples/RejectedCordaPublicIdentity'
+          description: ''
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      operationId: deleteIdentity
+      summary: Delete Identity
+      description: Delete the identity.
+      tags:
+        - Identity
+      security:
+        - API Key Authentication: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  '/v1/identities/{id}/export':
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      operationId: exportIdentity
+      summary: Export Identity
+      description: Export the identity.
+      tags:
+        - Identity
+      security:
+        - API Key Authentication: []
+      responses:
+        '200':
+          description: A ZIP archive with identity files.
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+components:
+  securitySchemes:
+    API Key Authentication:
+      type: http
+      scheme: bearer
+      description: >
+        Chainstack API uses [API keys](/platform/create-an-api-key) to
+        authenticate requests. You can view and manage your API keys in the
+        platform UI.
+
+        Your API keys carry many privileges, so be sure to keep them secure!
+
+        Provide your API key as the `Authorization` header. The value of the
+        header consists of `Bearer` prefix and secret key generated through the
+        platform UI.
+
+
+        ```bash
+
+        curl -X GET 'https://api.chainstack.com/v1/organization/' \
+
+        --header 'Authorization: Bearer
+        FX7CWlLg.FMpAO8cgCX2N7s41EncRru2nb5CmTZUt'
+
+        ```
+
+
+        All API requests must be made over HTTPS.
+  parameters:
+    ApplicationOrdering:
+      name: order_by
+      required: false
+      in: query
+      description: |
+        Which field to use when ordering the results.
+        <br> Tip: use `-` prefix to perform descending ordering (`-name`).
+      schema:
+        type: string
+        enum:
+          - name
+          - created_at
+    Pagination:
+      name: page
+      required: false
+      in: query
+      description: A page number within the paginated result set.
+      schema:
+        type: integer
+    NodeIdFilter:
+      name: node
+      required: false
+      in: query
+      description: Filter by node ID.
+      schema:
+        type: string
+    ApplicationStatusFilter:
+      name: status
+      required: false
+      in: query
+      description: Filter by application status.
+      schema:
+        $ref: '#/components/schemas/ApplicationStatusEnum'
+    Id:
+      name: id
+      in: path
+      required: true
+      description: A unique value identifying the Object.
+      schema:
+        type: string
+    ProjectOrdering:
+      name: order_by
+      required: false
+      in: query
+      description: |
+        Which field to use when ordering the results.
+        <br> Use the `-` prefix to perform descending ordering (`-name`).
+      schema:
+        type: string
+        enum:
+          - name
+          - created_at
+    OrganizationIdFilter:
+      name: organization
+      required: false
+      in: query
+      description: Filter by organization ID.
+      schema:
+        type: string
+    NameFilter:
+      name: name
+      required: false
+      in: query
+      description: Filter by name.
+      schema:
+        type: string
+    ProjectTypeFilter:
+      name: type
+      required: false
+      in: query
+      description: Filter by project type.
+      schema:
+        $ref: '#/components/schemas/ProjectTypeEnum'
+    NetworkOrdering:
+      name: order_by
+      required: false
+      in: query
+      description: |
+        Which field to use when ordering the results.
+        <br> Use the `-` prefix to perform descending ordering (`-name`).
+      schema:
+        type: string
+        enum:
+          - name
+          - created_at
+    ProjectIdFilter:
+      name: project
+      required: false
+      in: query
+      description: Filter by project ID.
+      schema:
+        type: string
+    ConsensusFilter:
+      name: consensus
+      required: false
+      in: query
+      description: Filter by consensus algorithm. Only for consortium networks.
+      schema:
+        type: string
+        example: raft
+    PublicNetworkNameFilter:
+      name: public_network
+      required: false
+      in: query
+      description: Filter by public network.
+      schema:
+        type: string
+        example: corda-network-uat
+        enum:
+          - corda-network
+          - corda-network-uat
+          - ethereum-mainnet
+          - ethereum-ropsten-testnet
+          - ethereum-rinkeby-testnet
+          - polygon-pos-mainnet
+          - polygon-pos-testnet
+          - bsc-mainnet
+          - bsc-testnet
+          - bitcoin-mainnet
+          - bitcoin-testnet
+    NetworkStatusFilter:
+      name: status
+      required: false
+      in: query
+      description: Filter by network status.
+      schema:
+        $ref: '#/components/schemas/NetworkStatusEnum'
+    ProtocolFilter:
+      name: protocol
+      required: false
+      in: query
+      description: Filter by protocol.
+      schema:
+        $ref: '#/components/schemas/Protocol'
+    NetworkProjectTypeFilter:
+      name: project_type
+      required: false
+      in: query
+      description: Filter by project type.
+      schema:
+        $ref: '#/components/schemas/ProjectTypeEnum'
+    NodeOrdering:
+      name: order_by
+      required: false
+      in: query
+      description: |
+        Which field to use when ordering the results.
+        <br> Use the `-` prefix to perform descending ordering (`-name`).
+      schema:
+        type: string
+        enum:
+          - name
+          - created_at
+    NetworkIdFilter:
+      name: network
+      required: false
+      in: query
+      description: Filter by network ID.
+      schema:
+        type: string
+    RegionFilter:
+      name: region
+      required: false
+      in: query
+      description: Filter by the region the node is deployed to.
+      schema:
+        $ref: '#/components/schemas/Region'
+    ProviderFilter:
+      name: provider
+      required: false
+      in: query
+      description: Filter by the cloud provider of the node.
+      schema:
+        $ref: '#/components/schemas/Provider'
+    NodeStatusFilter:
+      name: status
+      required: false
+      in: query
+      description: Filter by node status.
+      schema:
+        $ref: '#/components/schemas/NodeStatusEnum'
+    NodeRoleFilter:
+      name: role
+      required: false
+      in: query
+      description: Filter by node role.
+      schema:
+        $ref: '#/components/schemas/NodeRoleEnum'
+    NodeTypeFilter:
+      name: type
+      required: false
+      in: query
+      description: Filter by node type.
+      schema:
+        $ref: '#/components/schemas/NodeTypeEnum'
+    ArchiveFilter:
+      name: archive
+      required: false
+      in: query
+      description: >-
+        Filter Ethereum, Polygon PoS, and Binance Smart Chain nodes by the
+        archive mode flag.
+      schema:
+        type: boolean
+    IdentityIdFilter:
+      name: identity
+      required: false
+      in: query
+      description: Filter by identity ID.
+      schema:
+        type: string
+    IdentityOrdering:
+      name: order_by
+      required: false
+      in: query
+      description: |
+        Which field to use when ordering the results.
+        <br> Tip: use `-` prefix to perform descending ordering (`-name`).
+      schema:
+        type: string
+        enum:
+          - name
+          - created_at
+    IdentityProtocolFilter:
+      name: protocol
+      required: false
+      in: query
+      description: Filter by protocol.
+      schema:
+        $ref: '#/components/schemas/IdentityProtocol'
+    IdentityStatusFilter:
+      name: status
+      required: false
+      in: query
+      description: Filter by identity status.
+      schema:
+        $ref: '#/components/schemas/IdentityStatusEnum'
+  schemas:
+    ApplicationStatusEnum:
+      type: string
+      description: |
+        Status of the application.
+      readOnly: true
+      enum:
+        - installing
+        - installed
+        - failed
+        - deleting
+    Pagination:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+          description: Number of the objects in the paginated results.
+        next:
+          type: string
+          nullable: true
+          description: Link to the next page.
+        previous:
+          type: string
+          nullable: true
+          description: Link to the previous page.
+        results:
+          type: array
+          items:
+            type: object
+    ApplicationTypeEnum:
+      type: string
+      description: |
+        Type of the application.
+        <br>Available types:
+        * `cordapp` — only for `corda` nodes
+      enum:
+        - cordapp
+    CordaApplicationTypeEnum:
+      type: string
+      description: >
+        Type of the Corda application.
+
+        <br>Available types:
+
+        * `workflow` - JAR file that includes workflow definition.
+
+        * `contract` - JAR file that includes contract definition.
+
+        * `combined` - JAR file that includes both contract and workflow
+        definitions.
+      enum:
+        - workflow
+        - contract
+        - combined
+    CordaApplicationDetails:
+      type: object
+      description: Corda application details.
+      properties:
+        version:
+          type: string
+          readOnly: true
+          description: Corda application version.
+        cordapp_type:
+          $ref: '#/components/schemas/CordaApplicationTypeEnum'
+        manifest:
+          type: object
+          readOnly: true
+          additionalProperties:
+            type: string
+          description: Fields from MANIFEST.MF file.
+        entries:
+          type: array
+          readOnly: true
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Name of the embedded contract or workflow.
+              version:
+                type: string
+                description: Version of the embedded contract or workflow.
+              cordapp_type:
+                type: string
+                enum:
+                  - workflow
+                  - contract
+          description: Only if type is `combined`.
+    ApplicationDetails:
+      oneOf:
+        - $ref: '#/components/schemas/CordaApplicationDetails'
+      readOnly: true
+    Object:
+      type: object
+      description: Common object representation.
+      readOnly: true
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+    Creator:
+      type: object
+      description: Creator of the object.
+      readOnly: true
+      properties:
+        id:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        organization:
+          allOf:
+            - $ref: '#/components/schemas/Object'
+          description: Creator's organization.
+    CreatedAt:
+      type: string
+      format: date-time
+      readOnly: true
+      description: When the object was created.
+    BaseApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+          description: Name of the application.
+        type:
+          $ref: '#/components/schemas/ApplicationTypeEnum'
+        details:
+          $ref: '#/components/schemas/ApplicationDetails'
+        status:
+          $ref: '#/components/schemas/ApplicationStatusEnum'
+        creator:
+          allOf:
+            - $ref: '#/components/schemas/Creator'
+          description: Creator of the application.
+        created_at:
+          allOf:
+            - $ref: '#/components/schemas/CreatedAt'
+          description: When the application was created.
+    CordaApplicationConfiguration:
+      type: object
+      description: Corda application configuration.
+      properties:
+        node:
+          type: string
+          description: ID of Corda node to install the application on.
+    ApplicationConfiguration:
+      oneOf:
+        - $ref: '#/components/schemas/CordaApplicationConfiguration'
+      readOnly: true
+    Application:
+      allOf:
+        - $ref: '#/components/schemas/BaseApplication'
+        - type: object
+          properties:
+            configuration:
+              $ref: '#/components/schemas/ApplicationConfiguration'
+    CordaApplicationCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/CordaApplicationConfiguration'
+        - type: object
+          properties:
+            cordapp_file:
+              type: string
+              format: binary
+              description: Corda application file.
+          required:
+            - node
+            - cordapp_file
+    ApplicationCreateConfiguration:
+      oneOf:
+        - $ref: '#/components/schemas/CordaApplicationCreateConfiguration'
+    ApplicationCreate:
+      allOf:
+        - $ref: '#/components/schemas/BaseApplication'
+        - type: object
+          properties:
+            configuration:
+              allOf:
+                - $ref: '#/components/schemas/ApplicationCreateConfiguration'
+              description: >
+                Application-type specific parameters.
+
+                <br>Pass `{}` if there are no specific parameters for the chosen
+                application type.
+          required:
+            - type
+            - configuration
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          description: Name of the organization.
+    OrganizationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the organization.
+    ProjectTypeEnum:
+      type: string
+      description: >
+        Type of the project.
+
+        <br>
+
+        * `consortium` for [consortium
+        project](https://docs.chainstack.com/glossary/consortium-project)
+
+        * `public` for [public chain
+        project](https://docs.chainstack.com/glossary/public-chain-project)
+      enum:
+        - consortium
+        - public
+    BaseProject:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          description: Name of the project.
+        description:
+          type: string
+          description: Description of the project.
+        type:
+          allOf:
+            - $ref: '#/components/schemas/ProjectTypeEnum'
+          default: consortium
+        members:
+          type: integer
+          readOnly: true
+          description: |
+            Number of members invited to the consortium project.
+            <br>Only for the `consortium` project.
+        networks:
+          type: integer
+          readOnly: true
+          description: Number of networks created in the project.
+        creator:
+          allOf:
+            - $ref: '#/components/schemas/Creator'
+          readOnly: true
+          description: Creator of the project.
+        created_at:
+          allOf:
+            - $ref: '#/components/schemas/CreatedAt'
+          description: When the project was created.
+    Project:
+      allOf:
+        - $ref: '#/components/schemas/BaseProject'
+    ProjectCreate:
+      allOf:
+        - $ref: '#/components/schemas/BaseProject'
+        - type: object
+          required:
+            - name
+    ProjectUpdate:
+      allOf:
+        - $ref: '#/components/schemas/BaseProject'
+        - type: object
+          properties:
+            type:
+              readOnly: true
+    ProjectMember:
+      type: object
+      description: Member organization of the consortium project.
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+    NetworkStatusEnum:
+      type: string
+      description: >
+        See more about
+        [statuses](https://docs.chainstack.com/platform/view-node-and-network-status).
+      readOnly: true
+      enum:
+        - pending
+        - ok
+        - failed
+        - warning
+        - stopping
+        - stopped
+        - starting
+    Protocol:
+      type: string
+      enum:
+        - fabric
+        - corda
+        - quorum
+        - multichain
+        - ethereum
+        - polygon-pos
+        - bsc
+        - bitcoin
+      description: >
+        Protocol.
+
+        <br>See also [Supported
+        protocols](https://docs.chainstack.com/platform/supported-protocols).
+    QuorumNetworkDetails:
+      type: object
+      description: Quorum-specific attributes.
+      properties:
+        network_id:
+          type: integer
+          readOnly: true
+          description: 'Quorum network ID, which is always `10001`.'
+          default: 10001
+    MultiChainNetworkDetails:
+      type: object
+      description: MultiChain-specific attributes.
+      properties:
+        chain_name:
+          type: string
+          readOnly: true
+          description: Chain name. Same as the ID of the network.
+    FabricNetworkDetails:
+      type: object
+      description: Hyperledger Fabric-specific attributes.
+      properties:
+        default_channel_id:
+          type: string
+          readOnly: true
+          enum:
+            - defaultchannel
+    Details:
+      oneOf:
+        - $ref: '#/components/schemas/QuorumNetworkDetails'
+        - $ref: '#/components/schemas/MultiChainNetworkDetails'
+        - $ref: '#/components/schemas/FabricNetworkDetails'
+      readOnly: true
+    BaseNetwork:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        project:
+          type: string
+          description: >
+            ID of the network's project.
+
+            <br>See also
+            [Projects](https://docs.chainstack.com/glossary/project).
+        protocol:
+          $ref: '#/components/schemas/Protocol'
+        details:
+          $ref: '#/components/schemas/Details'
+        status:
+          $ref: '#/components/schemas/NetworkStatusEnum'
+        creator:
+          allOf:
+            - $ref: '#/components/schemas/Creator'
+          description: Creator of the network.
+        created_at:
+          allOf:
+            - $ref: '#/components/schemas/CreatedAt'
+          description: When the network was created.
+    QuorumNetworkConfiguration:
+      type: object
+      description: Quorum network configuration.
+      properties:
+        consensus:
+          type: string
+          description: >
+            See also [Quorum consensus
+            algorithms](https://docs.chainstack.com/blockchains/quorum#consensus).
+          enum:
+            - raft
+            - ibft
+    MultiChainNetworkConfiguration:
+      type: object
+      description: MultiChain network configuration.
+      properties:
+        consensus:
+          type: string
+          description: >
+            See also [MultiChain
+            consensus](https://docs.chainstack.com/blockchains/multichain#consensus).
+          enum:
+            - round-robin
+    FabricNetworkConfiguration:
+      type: object
+      description: Hyperledger Fabric network configuration.
+      properties:
+        consensus:
+          type: string
+          description: >
+            See also [Hyperledger Fabric
+            consensus](https://docs.chainstack.com/blockchains/fabric#consensus).
+          enum:
+            - raft
+    CordaNetworkConfiguration:
+      type: object
+      description: Corda network configuration.
+      properties:
+        consensus:
+          type: string
+          description: >
+            See also [Corda consensus
+            algorithms](https://docs.chainstack.com/blockchains/corda#consensus).
+          enum:
+            - single-notary
+    CordaPublicNetworkConfiguration:
+      type: object
+      description: Corda network configuration.
+      properties:
+        network:
+          type: string
+          description: >
+            Network to join.
+
+            <br>See also [Corda
+            networks](https://docs.chainstack.com/operations/corda/networks).
+          enum:
+            - corda-network
+            - corda-network-uat
+    EthereumNetworkConfiguration:
+      type: object
+      description: Ethereum network configuration.
+      properties:
+        network:
+          type: string
+          description: >
+            Network to join.
+
+            <br>See also [Ethereum
+            networks](https://docs.chainstack.com/operations/ethereum/networks).
+          enum:
+            - ethereum-mainnet
+            - ethereum-ropsten-testnet
+            - ethereum-rinkeby-testnet
+    BinanceSmartChainNetworkConfiguration:
+      type: object
+      description: Binance Smart Chain network configuration.
+      properties:
+        network:
+          type: string
+          description: >
+            Network to join.
+
+            <br>See also [Binance Smart Chain
+            networks](https://docs.chainstack.com/operations/bsc/networks).
+          enum:
+            - bsc-mainnet
+            - bsc-testnet
+    PolygonPoSNetworkConfiguration:
+      type: object
+      description: Polygon PoS network configuration.
+      properties:
+        network:
+          type: string
+          description: >
+            Network to join.
+
+            <br>See also [Polygon PoS
+            networks](https://docs.chainstack.com/operations/polygon/networks).
+          enum:
+            - polygon-pos-mainnet
+            - polygon-pos-testnet
+    BitcoinNetworkConfiguration:
+      type: object
+      description: Bitcoin network configuration.
+      properties:
+        network:
+          type: string
+          description: >
+            Network to join.
+
+            <br>See also [Bitcoin
+            networks](https://docs.chainstack.com/operations/bitcoin/networks).
+          enum:
+            - bitcoin-mainnet
+            - bitcoin-testnet
+    Configuration:
+      oneOf:
+        - $ref: '#/components/schemas/QuorumNetworkConfiguration'
+        - $ref: '#/components/schemas/MultiChainNetworkConfiguration'
+        - $ref: '#/components/schemas/FabricNetworkConfiguration'
+        - $ref: '#/components/schemas/CordaNetworkConfiguration'
+        - $ref: '#/components/schemas/CordaPublicNetworkConfiguration'
+        - $ref: '#/components/schemas/EthereumNetworkConfiguration'
+        - $ref: '#/components/schemas/BinanceSmartChainNetworkConfiguration'
+        - $ref: '#/components/schemas/PolygonPoSNetworkConfiguration'
+        - $ref: '#/components/schemas/BitcoinNetworkConfiguration'
+      readOnly: true
+    NodeTypeEnum:
+      type: string
+      description: |
+        Type of the node.
+        <br>Available types:
+        * `shared` — only for `ethereum`, `polygon-pos`, `bsc`, `bitcoin`
+        * `dedicated` — for all protocols
+      enum:
+        - shared
+        - dedicated
+    Provider:
+      type: string
+      enum:
+        - aws
+        - azure
+        - gcloud
+      description: >
+        Cloud provider.
+
+        <br>See also [Supported cloud
+        providers](https://docs.chainstack.com/platform/supported-cloud-hosting-providers).
+    Region:
+      type: string
+      enum:
+        - asia-southeast1
+        - ap-southeast-1
+        - us-west-2
+        - us-east-1
+        - uksouth
+      description: |
+        Regions the nodes are deployed to.
+
+        Available for `gcloud`:
+        * `asia-southeast1`
+
+        Available for `aws`:
+        * `ap-southeast-1`
+        * `us-west-2`
+        * `us-east-1`
+
+        Available for `azure`:
+        * `uksouth`
+    QuorumNodeDetails:
+      type: object
+      description: Quorum node details.
+      properties:
+        version:
+          type: string
+          readOnly: true
+        api_namespaces:
+          type: array
+          items:
+            type: string
+        https_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        tm:
+          type: string
+          readOnly: true
+          enum:
+            - tessera
+        tm_version:
+          type: string
+          readOnly: true
+        tm_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        tm_enclave_public_key:
+          type: string
+          readOnly: true
+        tm_enclave_private_key:
+          type: string
+          format: password
+          readOnly: true
+          description: Only for the owner of the node.
+        validator_address:
+          type: string
+          readOnly: true
+          description: Only if consensus is `ibft`.
+        wallet_address:
+          type: string
+          readOnly: true
+        wallet_public_key:
+          type: string
+          readOnly: true
+        wallet_private_key:
+          type: string
+          format: password
+          readOnly: true
+          description: Only for the owner of the node.
+        auth_username:
+          type: string
+          readOnly: true
+          description: |
+            Basic authentication username to access the node endpoints.
+            <br>Only for the owner of the node.
+        auth_password:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Basic authentication password to access the node endpoints.
+            <br>Only for the owner of the node.
+        auth_key:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Authentication key to access the node endpoints.
+            <br>Only for the owner of the node.
+    MultiChainNodeDetails:
+      type: object
+      description: MultiChain node details.
+      properties:
+        version:
+          type: string
+          readOnly: true
+        https_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        auth_username:
+          type: string
+          readOnly: true
+          description: |
+            Basic authentication username to access the node endpoint.
+            <br>Only for the owner of the node.
+        auth_password:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Basic authentication password to access the node endpoint.
+            <br>Only for the owner of the node.
+        wallet_address:
+          type: string
+          readOnly: true
+        wallet_public_key:
+          type: string
+          readOnly: true
+        wallet_private_key:
+          type: string
+          format: password
+          readOnly: true
+          description: Only for the owner of the node.
+    FabricNodeDetails:
+      type: object
+      description: Hyperledger Fabric node details.
+      properties:
+        version:
+          type: string
+          readOnly: true
+        configuration:
+          type: array
+          readOnly: true
+          items:
+            type: string
+            enum:
+              - Anchor
+              - Committer
+        name:
+          type: string
+          readOnly: true
+        rpc_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+    FabricOrdererNodeDetails:
+      type: object
+      description: Hyperledger Fabric orderer details.
+      properties:
+        version:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        rpc_endpoint:
+          type: string
+          readOnly: true
+    CordaNodeDetails:
+      type: object
+      description: Corda node details.
+      properties:
+        version:
+          type: string
+          readOnly: true
+        legal_name:
+          type: string
+          readOnly: true
+        rpc_hostname:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        rpc_port:
+          type: integer
+          readOnly: true
+          description: Only for the owner of the node.
+        rpc_username:
+          type: string
+          readOnly: true
+          description: |
+            Basic authentication username to access the RPC endpoint.
+            <br>Only for the owner of the node.
+        rpc_password:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Basic authentication password to access the RPC endpoint.
+            <br>Only for the owner of the node.
+    CordaNotaryNodeDetails:
+      type: object
+      description: Corda Notary details (role=`notary`).
+      properties:
+        version:
+          type: string
+          readOnly: true
+        legal_name:
+          type: string
+          readOnly: true
+    CordaNMSNodeDetails:
+      type: object
+      description: Corda Network Map Service details (role=`nms`).
+      properties:
+        version:
+          type: string
+          readOnly: true
+        url:
+          type: string
+          readOnly: true
+          description: >
+            URL of the network map service.
+
+            <br>See also [Corda network map
+            service](https://docs.chainstack.com/blockchains/corda#network-map-service).
+    CordaPublicNodeDetails:
+      type: object
+      description: Corda public node details.
+      properties:
+        version:
+          type: string
+          readOnly: true
+        legal_name:
+          type: string
+          readOnly: true
+        rpc_hostname:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        rpc_port:
+          type: integer
+          readOnly: true
+          description: Only for the owner of the node.
+        rpc_username:
+          type: string
+          readOnly: true
+          description: |
+            Basic authentication username to access the RPC endpoint.
+            <br>Only for the owner of the node.
+        rpc_password:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Basic authentication password to access the RPC endpoint.
+            <br>Only for the owner of the node.
+    EthereumNodeDetails:
+      type: object
+      description: Ethereum node details.
+      properties:
+        mode:
+          type: string
+          description: >-
+            See also [Ethereum node
+            modes](https://docs.chainstack.com/operations/ethereum/modes)
+          readOnly: true
+          enum:
+            - full
+            - archive
+        version:
+          type: string
+          readOnly: true
+        api_namespaces:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        https_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        wss_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        graphql_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        auth_username:
+          type: string
+          readOnly: true
+          description: |
+            Basic authentication username to access the node endpoints.
+            <br>Only for the owner of the node.
+        auth_password:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Basic authentication password to access the node endpoints.
+            <br>Only for the owner of the node.
+        auth_key:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Authentication key to access the node endpoints.
+            <br>Only for the owner of the node.
+    BinanceSmartChainNodeDetails:
+      type: object
+      description: Binance Smart Chain node details.
+      properties:
+        mode:
+          type: string
+          description: >-
+            See also [Binance Smart Chain node
+            modes](https://docs.chainstack.com/operations/bsc/modes)
+          readOnly: true
+          enum:
+            - full
+            - archive
+        version:
+          type: string
+          readOnly: true
+        api_namespaces:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        https_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        wss_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        graphql_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        auth_username:
+          type: string
+          readOnly: true
+          description: |
+            Basic authentication username to access the node endpoints.
+            <br>Only for the owner of the node.
+        auth_password:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Basic authentication password to access the node endpoints.
+            <br>Only for the owner of the node.
+        auth_key:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Authentication key to access the node endpoints.
+            <br>Only for the owner of the node.
+    BitcoinNodeDetails:
+      type: object
+      description: Bitcoin node details.
+      properties:
+        version:
+          type: string
+          readOnly: true
+        https_endpoint:
+          type: string
+          readOnly: true
+          description: Only for the owner of the node.
+        auth_username:
+          type: string
+          readOnly: true
+          description: |
+            Basic authentication username to access the node endpoint.
+            <br>Only for the owner of the node.
+        auth_password:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Basic authentication password to access the node endpoint.
+            <br>Only for the owner of the node.
+        auth_key:
+          type: string
+          format: password
+          readOnly: true
+          description: |
+            Authentication key to access the node endpoint.
+            <br>Only for the owner of the node.
+    ExplorerNodeDetails:
+      type: object
+      description: Explorer details (role=`explorer`).
+      properties:
+        url:
+          type: string
+          readOnly: true
+          description: URL of the explorer.
+    NodeDetails:
+      oneOf:
+        - $ref: '#/components/schemas/QuorumNodeDetails'
+        - $ref: '#/components/schemas/MultiChainNodeDetails'
+        - $ref: '#/components/schemas/FabricNodeDetails'
+        - $ref: '#/components/schemas/FabricOrdererNodeDetails'
+        - $ref: '#/components/schemas/CordaNodeDetails'
+        - $ref: '#/components/schemas/CordaNotaryNodeDetails'
+        - $ref: '#/components/schemas/CordaNMSNodeDetails'
+        - $ref: '#/components/schemas/CordaPublicNodeDetails'
+        - $ref: '#/components/schemas/EthereumNodeDetails'
+        - $ref: '#/components/schemas/BinanceSmartChainNodeDetails'
+        - $ref: '#/components/schemas/BitcoinNodeDetails'
+        - $ref: '#/components/schemas/ExplorerNodeDetails'
+      readOnly: true
+    NodeStatusEnum:
+      type: string
+      description: >
+        See more about
+        [statuses](https://docs.chainstack.com/platform/view-node-and-network-status).
+      readOnly: true
+      enum:
+        - pending
+        - running
+        - maintenance
+        - failed
+        - error
+        - stopping
+        - stopped
+        - starting
+    BaseNode:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          description: Name of the node.
+        network:
+          type: string
+          description: ID of the network.
+        organization:
+          type: string
+          readOnly: true
+          description: ID of the organization that owns this node.
+        type:
+          $ref: '#/components/schemas/NodeTypeEnum'
+        provider:
+          $ref: '#/components/schemas/Provider'
+        region:
+          $ref: '#/components/schemas/Region'
+        details:
+          allOf:
+            - $ref: '#/components/schemas/NodeDetails'
+          description: Protocol-specific attributes.
+        status:
+          $ref: '#/components/schemas/NodeStatusEnum'
+        creator:
+          allOf:
+            - $ref: '#/components/schemas/Creator'
+          description: Creator of the network.
+        created_at:
+          allOf:
+            - $ref: '#/components/schemas/CreatedAt'
+          description: When the node was created.
+    NodeRoleEnum:
+      type: string
+      description: >
+        Role of the node.
+
+        <br>Available roles:
+
+        * `peer` — peer node
+
+        * `orderer` — only for `fabric`
+
+        * `explorer` — for `fabric`, `quorum`, `multichain`
+
+        * `nms` — only for `corda`
+
+        * `notary` — only for `corda`
+
+
+        See also [Service node](/glossary/service-node) and [Peer
+        node](/glossary/peer-node).
+      enum:
+        - peer
+        - orderer
+        - nms
+        - notary
+        - explorer
+    CordaPublicNodeConfiguration:
+      type: object
+      description: Corda Network node configuration.
+      properties:
+        identity:
+          type: string
+          description: >
+            See also [Identity
+            management](https://docs.chainstack.com/platform/manage-your-organization-identity#add-a-new-identity).
+    EthereumNodeConfiguration:
+      type: object
+      description: Ethereum node configuration.
+      properties:
+        archive:
+          type: boolean
+          description: >
+            Pass `true` if you want to access full blockchain data and an
+            archive of historical states.
+
+            <br>See more about [archive
+            nodes](https://docs.chainstack.com/operations/ethereum/modes).
+    BinanceSmartChainNodeConfiguration:
+      type: object
+      description: Binance Smart Chain node configuration.
+      properties:
+        archive:
+          type: boolean
+          description: >
+            Pass `true` if you want to access full blockchain data and an
+            archive of historical states.
+
+            <br>See more about [archive
+            nodes](https://docs.chainstack.com/operations/bsc/modes).
+    PolygonPoSNodeConfiguration:
+      type: object
+      description: Polygon PoS node configuration.
+      properties:
+        archive:
+          type: boolean
+          description: >
+            Pass `true` if you want to access full blockchain data and an
+            archive of historical states.
+
+            <br>See more about [archive
+            nodes](https://docs.chainstack.com/operations/polygon/modes).
+    NodeConfiguration:
+      oneOf:
+        - $ref: '#/components/schemas/CordaPublicNodeConfiguration'
+        - $ref: '#/components/schemas/EthereumNodeConfiguration'
+        - $ref: '#/components/schemas/BinanceSmartChainNodeConfiguration'
+        - $ref: '#/components/schemas/PolygonPoSNodeConfiguration'
+      readOnly: true
+    Node:
+      allOf:
+        - $ref: '#/components/schemas/BaseNode'
+        - type: object
+          properties:
+            role:
+              $ref: '#/components/schemas/NodeRoleEnum'
+            configuration:
+              $ref: '#/components/schemas/NodeConfiguration'
+    Network:
+      allOf:
+        - $ref: '#/components/schemas/BaseNetwork'
+        - type: object
+          properties:
+            name:
+              type: string
+              description: Name of the network.
+            configuration:
+              $ref: '#/components/schemas/Configuration'
+            nodes:
+              items:
+                $ref: '#/components/schemas/Node'
+    FabricNetworkCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/FabricNetworkConfiguration'
+        - type: object
+          required:
+            - consensus
+    CordaNetworkCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/CordaNetworkConfiguration'
+        - type: object
+          required:
+            - consensus
+    QuorumNetworkCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/QuorumNetworkConfiguration'
+        - type: object
+          required:
+            - consensus
+    MultiChainNetworkCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/MultiChainNetworkConfiguration'
+        - type: object
+          required:
+            - consensus
+    EthereumNetworkCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/EthereumNetworkConfiguration'
+        - type: object
+          required:
+            - network
+    BinanceSmartChainNetworkCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/BinanceSmartChainNetworkConfiguration'
+        - type: object
+          required:
+            - network
+    PolygonPoSNetworkCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/PolygonPoSNetworkConfiguration'
+        - type: object
+          required:
+            - network
+    BitcoinNetworkCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/BitcoinNetworkConfiguration'
+        - type: object
+          required:
+            - network
+    CordaPublicNetworkCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/CordaPublicNetworkConfiguration'
+        - type: object
+          required:
+            - network
+    CreateConfiguration:
+      oneOf:
+        - $ref: '#/components/schemas/FabricNetworkCreateConfiguration'
+        - $ref: '#/components/schemas/CordaNetworkCreateConfiguration'
+        - $ref: '#/components/schemas/QuorumNetworkCreateConfiguration'
+        - $ref: '#/components/schemas/MultiChainNetworkCreateConfiguration'
+        - $ref: '#/components/schemas/EthereumNetworkCreateConfiguration'
+        - $ref: '#/components/schemas/BinanceSmartChainNetworkCreateConfiguration'
+        - $ref: '#/components/schemas/PolygonPoSNetworkCreateConfiguration'
+        - $ref: '#/components/schemas/BitcoinNetworkCreateConfiguration'
+        - $ref: '#/components/schemas/CordaPublicNetworkCreateConfiguration'
+    NodeRoleCreateEnum:
+      type: string
+      description: Role of the node.
+      enum:
+        - peer
+    CordaPublicNodeCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/CordaPublicNodeConfiguration'
+        - type: object
+          required:
+            - identity
+    EthereumNodeCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/EthereumNodeConfiguration'
+        - type: object
+          required:
+            - archive
+    BinanceSmartChainNodeCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/BinanceSmartChainNodeConfiguration'
+        - type: object
+          required:
+            - archive
+    PolygonPoSNodeCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/PolygonPoSNodeConfiguration'
+        - type: object
+          required:
+            - archive
+    NodeCreateConfiguration:
+      oneOf:
+        - $ref: '#/components/schemas/CordaPublicNodeCreateConfiguration'
+        - $ref: '#/components/schemas/EthereumNodeCreateConfiguration'
+        - $ref: '#/components/schemas/BinanceSmartChainNodeCreateConfiguration'
+        - $ref: '#/components/schemas/PolygonPoSNodeCreateConfiguration'
+    NodeInitialCreate:
+      allOf:
+        - $ref: '#/components/schemas/BaseNode'
+        - type: object
+          properties:
+            role:
+              $ref: '#/components/schemas/NodeRoleCreateEnum'
+            configuration:
+              allOf:
+                - $ref: '#/components/schemas/NodeCreateConfiguration'
+              description: >
+                Protocol specific parameters.
+
+                <br>Pass `{}` if there are no specific parameters for the
+                selected protocol.
+            network:
+              readOnly: true
+          required:
+            - name
+            - region
+            - provider
+            - role
+            - type
+            - configuration
+    NetworkCreate:
+      allOf:
+        - $ref: '#/components/schemas/BaseNetwork'
+        - type: object
+          properties:
+            name:
+              type: string
+              description: |
+                Name of the network.
+                * Required for `consortium` networks.
+                * Autogenerated for `public chain` networks.
+            configuration:
+              allOf:
+                - $ref: '#/components/schemas/CreateConfiguration'
+              description: >
+                Protocol-specific parameters.
+
+                <br>Pass `{}` if there are no specific parameters for the chosen
+                protocol.
+            nodes:
+              items:
+                $ref: '#/components/schemas/NodeInitialCreate'
+              description: List of nodes that will be initially created.
+          required:
+            - project
+            - protocol
+            - configuration
+            - nodes
+            - name
+    NetworkUpdate:
+      allOf:
+        - $ref: '#/components/schemas/BaseNetwork'
+        - type: object
+          properties:
+            name:
+              type: string
+              description: New name of the network.
+            configuration:
+              $ref: '#/components/schemas/Configuration'
+            nodes:
+              readOnly: true
+              items:
+                $ref: '#/components/schemas/Node'
+            project:
+              readOnly: true
+            protocol:
+              readOnly: true
+    NodeCreate:
+      allOf:
+        - $ref: '#/components/schemas/BaseNode'
+        - type: object
+          properties:
+            role:
+              $ref: '#/components/schemas/NodeRoleCreateEnum'
+            configuration:
+              allOf:
+                - $ref: '#/components/schemas/NodeCreateConfiguration'
+              description: >
+                Protocol-specific parameters.
+
+                <br>Pass `{}` if there are no specific parameters for the
+                selected protocol.
+          required:
+            - name
+            - network
+            - region
+            - provider
+            - role
+            - type
+            - configuration
+    NodeUpdate:
+      allOf:
+        - $ref: '#/components/schemas/BaseNode'
+        - type: object
+          properties:
+            configuration:
+              $ref: '#/components/schemas/NodeConfiguration'
+            type:
+              readOnly: true
+            role:
+              allOf:
+                - $ref: '#/components/schemas/NodeRoleEnum'
+              readOnly: true
+            provider:
+              readOnly: true
+            region:
+              readOnly: true
+            network:
+              readOnly: true
+    IdentityProtocol:
+      type: string
+      enum:
+        - corda
+    IdentityStatusEnum:
+      type: string
+      description: |
+        Status of the identity approval process.
+        <br> The identity approval may take up to two days.
+      readOnly: true
+      enum:
+        - pending
+        - approved
+        - rejected
+    CordaPublicIdentityDetails:
+      type: object
+      description: Corda Network identity-specific attributes.
+      properties:
+        keystore_password:
+          type: string
+          format: password
+          readOnly: true
+          description: >-
+            Password to access the `nodekeystore.jks` and `sslkeystore.jks`
+            identity files.
+        truststore_password:
+          type: string
+          format: password
+          readOnly: true
+          description: Password to access the `truststore.jks` identity file.
+    IdentityDetails:
+      oneOf:
+        - $ref: '#/components/schemas/CordaPublicIdentityDetails'
+      readOnly: true
+    BaseIdentity:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          description: Name of the identity.
+        organization:
+          type: string
+          readOnly: true
+          description: ID of the organization that owns this identity.
+        protocol:
+          $ref: '#/components/schemas/IdentityProtocol'
+        details:
+          $ref: '#/components/schemas/IdentityDetails'
+        status:
+          $ref: '#/components/schemas/IdentityStatusEnum'
+        rejection_reason:
+          type: string
+          readOnly: true
+          description: The reason of rejection.
+        creator:
+          allOf:
+            - $ref: '#/components/schemas/Creator'
+          description: Creator of the identity.
+        created_at:
+          allOf:
+            - $ref: '#/components/schemas/CreatedAt'
+          description: When the identity was created.
+    CordaPublicIdentityConfiguration:
+      type: object
+      description: Corda Network identity configuration.
+      properties:
+        issuer:
+          type: string
+          description: >
+            Identity issuing network.
+
+            <br>See more about [Corda
+            networks](https://docs.chainstack.com/operations/corda/networks)
+          enum:
+            - corda-network
+            - corda-network-uat
+        node_operator_email:
+          type: string
+        legal_name:
+          type: string
+    IdentityConfiguration:
+      oneOf:
+        - $ref: '#/components/schemas/CordaPublicIdentityConfiguration'
+      readOnly: true
+    Identity:
+      allOf:
+        - $ref: '#/components/schemas/BaseIdentity'
+        - type: object
+          properties:
+            configuration:
+              $ref: '#/components/schemas/IdentityConfiguration'
+    CordaPublicIdentityCreateConfiguration:
+      allOf:
+        - $ref: '#/components/schemas/CordaPublicIdentityConfiguration'
+        - type: object
+          required:
+            - issuer
+            - node_operator_email
+            - legal_name
+    IdentityCreateConfiguration:
+      oneOf:
+        - $ref: '#/components/schemas/CordaPublicIdentityCreateConfiguration'
+    IdentityCreate:
+      allOf:
+        - $ref: '#/components/schemas/BaseIdentity'
+        - type: object
+          properties:
+            configuration:
+              allOf:
+                - $ref: '#/components/schemas/IdentityCreateConfiguration'
+              description: >
+                Protocol specific parameters.
+
+                <br>Pass `{}` if there are no specific parameters for the chosen
+                protocol.
+          required:
+            - name
+            - protocol
+            - configuration
+    IdentityUpdate:
+      allOf:
+        - $ref: '#/components/schemas/BaseIdentity'
+        - type: object
+          properties:
+            configuration:
+              $ref: '#/components/schemas/IdentityConfiguration'
+            protocol:
+              readOnly: true
+  examples:
+    CordaApplication:
+      value:
+        id: CA-123-456-789
+        name: My CorDapp
+        status: installed
+        type: cordapp
+        configuration:
+          node: ND-123-456-789
+        details:
+          cordapp_type: workflow
+          version: 1579870483
+          manifest:
+            Sealed: true
+            Manifest-Version: 1
+            Min-Platform-Version: 4
+            Cordapp-Workflow-Name: My workflow
+            Cordapp-Workflow-Vendor: Chainstack
+            Target-Platform-Version: 4
+            Cordapp-Workflow-Licence: 'Apache License, Version 2.0'
+            Cordapp-Workflow-Version: 123456789
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    CordaApplicationCombined:
+      value:
+        id: CA-111-222-333
+        name: My combined CorDapp
+        status: installed
+        type: cordapp
+        configuration:
+          node: ND-111-222-333
+        details:
+          cordapp_type: combined
+          version: ''
+          manifest:
+            Sealed: true
+            Manifest-Version: 1
+            Min-Platform-Version: 4
+            Cordapp-Contract-Name: Contract
+            Cordapp-Workflow-Name: Workflow
+            Cordapp-Contract-Vendor: Chainstack
+            Cordapp-Workflow-Vendor: Chainstack
+            Target-Platform-Version: 4
+            Cordapp-Contract-Licence: 'Apache License, Version 2.0'
+            Cordapp-Contract-Version: 1
+            Cordapp-Workflow-Licence": 'Apache License, Version 2.0'
+            Cordapp-Workflow-Version: 1
+          entries:
+            - name: Contract
+              version: 1
+              cordapp_type: contract
+            - name: Workflow
+              version: 1
+              cordapp_type: workflow
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    ConsortiumProjectCreate:
+      value:
+        name: My consortium project
+        description: My consortium project description
+    PublicProjectCreate:
+      value:
+        name: My public chain project
+        description: My public chain project description
+        type: public
+    ConsortiumProject:
+      value:
+        id: PR-123-456
+        name: My consortium project
+        description: My consortium project description
+        type: consortium
+        members: 1
+        networks: 0
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    PublicProject:
+      value:
+        id: PR-123-456
+        name: My public chain project
+        type: public
+        networks: 0
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    FabricNetworkCreate:
+      value:
+        name: My Hyperledger Fabric network
+        project: PR-123-456
+        protocol: fabric
+        configuration:
+          consensus: raft
+        nodes:
+          - name: My Hyperledger Fabric node
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            configuration: {}
+    CordaNetworkCreate:
+      value:
+        name: My Corda network
+        project: PR-123-456
+        protocol: corda
+        configuration:
+          consensus: single-notary
+        nodes:
+          - name: My Corda node
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            configuration: {}
+    QuorumNetworkCreate:
+      value:
+        name: My Quorum network
+        project: PR-123-456
+        protocol: quorum
+        configuration:
+          consensus: ibft
+        nodes:
+          - name: My Quorum node
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            configuration: {}
+    MultiChainNetworkCreate:
+      value:
+        name: My MultiChain network
+        project: PR-123-456
+        protocol: multichain
+        configuration:
+          consensus: round-robin
+        nodes:
+          - name: My MultiChain node
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            configuration: {}
+    EthereumNetworkCreate:
+      value:
+        project: PR-123-456
+        protocol: ethereum
+        configuration:
+          network: ethereum-mainnet
+        nodes:
+          - name: My Ethereum node
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            configuration:
+              archive: true
+    PolygonPoSNetworkCreate:
+      value:
+        project: PR-123-456
+        protocol: polygon-pos
+        configuration:
+          network: polygon-pos-mainnet
+        nodes:
+          - name: My Polygon PoS node
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            configuration:
+              archive: true
+    BinanceSmartChainNetworkCreate:
+      value:
+        project: PR-123-456
+        protocol: bsc
+        configuration:
+          network: bsc-mainnet
+        nodes:
+          - name: My Binance Smart Chain node
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            configuration:
+              archive: true
+    BitcoinNetworkCreate:
+      value:
+        project: PR-123-456
+        protocol: bitcoin
+        configuration:
+          network: bitcoin-mainnet
+        nodes:
+          - name: My Bitcoin node
+            type: shared
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            configuration: {}
+    CordaPublicNetworkCreate:
+      value:
+        project: PR-123-456
+        protocol: corda
+        configuration:
+          network: corda-network-uat
+        nodes:
+          - name: My Corda pre-production node
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            configuration:
+              identity: ID-123-456-7
+    FabricNetwork:
+      value:
+        id: NW-123-456-7
+        name: My Hyperledger Fabric network
+        project: PR-123-456
+        protocol: fabric
+        configuration:
+          consensus: raft
+        details:
+          default_channel_id: defaultchannel
+        status: ok
+        nodes:
+          - id: ND-123-456-789
+            name: My Hyperledger Fabric node
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              version: 2.2.0
+              configuration:
+                - Anchor
+                - Committer
+              name: nd-123-456-789.rg-123-456.p2pify.com
+              rpc_endpoint: 'grpcs://nd-123-456-789.rg-123-456.p2pify.com:7051'
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+          - id: ND-123-456-780
+            name: Orderer
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: orderer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              version: 2.2.0
+              name: nd-123-456-780.rg-123-456.p2pify.com
+              rpc_endpoint: 'grpcs://nd-123-456-780.rg-123-456.p2pify.com:7050'
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+          - id: ND-123-456-781
+            name: Explorer
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: explorer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              url: 'https://nd-123-456-781.p2pify.com'
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    CordaNetwork:
+      value:
+        id: NW-123-456-7
+        name: My Corda network
+        project: PR-123-456
+        protocol: corda
+        configuration:
+          consensus: single-notary
+        details: {}
+        status: ok
+        nodes:
+          - id: ND-123-456-789
+            name: My Corda node
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              version: 4.4
+              legal_name: >-
+                OU=RG-123-456-ND-123-456-789,O=RG-123-456,C=SG,L=Singapore,ST=Singapore
+              rpc_hostname: nd-003-319-498.rg-855-124.p2pify.com
+              rpc_port: 10201
+              rpc_username: user-name
+              rpc_password: pass-word-pass-word-pass-word
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+          - id: ND-123-456-780
+            name: Network Map Service
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: nms
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              version: 0.5.1
+              url: 'https://nd-123-456-780.p2pify.com'
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+          - id: ND-123-456-781
+            name: Notary
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: notary
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              version: 4.4
+              legal_name: >-
+                OU=RG-123-456-ND-123-456-781,O=RG-123-456,C=SG,L=Singapore,ST=Singapore
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    QuorumNetwork:
+      value:
+        id: NW-123-456-7
+        name: My Quorum network
+        project: PR-123-456
+        protocol: quorum
+        configuration:
+          consensus: ibft
+        details:
+          network_id: 10001
+        status: ok
+        nodes:
+          - id: ND-123-456-789
+            name: My Quorum node
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              version: 2.6.0
+              api_namespaces:
+                - admin
+                - net
+                - eth
+                - web3
+                - personal
+                - txpool
+                - debug
+                - quorum
+                - raft
+              https_endpoint: 'https://nd-123-456-789.p2pify.com'
+              tm: tessera
+              tm_version: 0.10.5
+              tm_endpoint: 'https://tm-api-nd-123-456-789.p2pify.com'
+              tm_enclave_public_key: gixjsQ+57spb/Wu9VyGXqAnuF2ynzlKTJnOsxdW8inQ=
+              tm_enclave_private_key: Rapd21ZH+Ht5zm2x9WQoXmZc6C8CoxxW1mSpMlBXphY=
+              wallet_address: 9.974272899093901e+47
+              wallet_public_key: >-
+                99755718e0a6e40c66e48f6101107b615d1ef12e4c4819d13998aad538b0305b6e637aa0d91394edc6f398d4d87db4341952edfbec918fd2ccc297b668029483
+              wallet_private_key: 5506a1103c51e4c03f2e43872607f98c009ad8515a988d4c7d75343638f0dca7
+              auth_username: user-name
+              auth_password: pass-word-pass-word-pass-word
+              auth_key: dc1cb98b6529bb4b39b29f65dd755163
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+          - id: ND-123-456-781
+            name: Explorer
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: explorer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              url: 'https://nd-123-456-781.p2pify.com'
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    MultiChainNetwork:
+      value:
+        id: NW-123-456-7
+        name: My MultiChain network
+        project: PR-123-456
+        protocol: multichain
+        configuration:
+          consensus: round-robin
+        details:
+          chain_name: nw-123-456-7
+        status: ok
+        nodes:
+          - id: ND-123-456-789
+            name: My MultiChain node
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              version: 2.0.3
+              https_endpoint: 'https://nd-123-456-789.p2pify.com'
+              auth_username: user-name
+              auth_password: pass-word-pass-word-pass-word
+              wallet_address: 1GFrdqKYgnix4T4mE1QJszDQowHCmTFqYYQ6Yg
+              wallet_public_key: >-
+                02d8c2813ad73b1a692648d0ee2e5dca92238f8e85deb07427c79c21c0d616d78b
+              wallet_private_key: VEaiqGnqwSiAuoeqLJVHZwJNSPgyx5XfXxfYNwxfLLRoDmh2pC8gaATV
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+          - id: ND-123-456-781
+            name: Explorer
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: explorer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              url: 'https://nd-123-456-781.p2pify.com'
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    EthereumNetwork:
+      value:
+        id: NW-123-456-7
+        name: Mainnet
+        project: PR-123-456
+        protocol: ethereum
+        configuration:
+          network: ethereum-mainnet
+        details: {}
+        status: ok
+        nodes:
+          - id: ND-123-456-789
+            name: My Ethereum node
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration:
+              archive: true
+            details:
+              mode: archive
+              version: 1.9.9
+              api_namespaces:
+                - net
+                - eth
+                - web3
+                - txpool
+                - debug
+              graphql_endpoint: 'https://nd-123-456-789.p2pify.com/graphql'
+              https_endpoint: 'https://nd-123-456-789.p2pify.com'
+              wss_endpoint: 'wss://ws-nd-123-456-789.p2pify.com'
+              auth_username: user-name
+              auth_password: pass-word-pass-word-pass-word
+              auth_key: dc1cb98b6529bb4b39b29f65dd755163
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    PolygonPoSNetwork:
+      value:
+        id: NW-123-456-7
+        name: Mainnet
+        project: PR-123-456
+        protocol: polygon-pos
+        configuration:
+          network: polygon-pos-mainnet
+        details: {}
+        status: ok
+        nodes:
+          - id: ND-123-456-789
+            name: My Polygon PoS node
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration:
+              archive: true
+            details:
+              mode: archive
+              version: 1.0.6
+              api_namespaces:
+                - net
+                - eth
+                - web3
+                - txpool
+                - debug
+                - parlia
+              graphql_endpoint: 'https://nd-123-456-789.p2pify.com/graphql'
+              https_endpoint: 'https://nd-123-456-789.p2pify.com'
+              wss_endpoint: 'wss://ws-nd-123-456-789.p2pify.com'
+              auth_username: user-name
+              auth_password: pass-word-pass-word-pass-word
+              auth_key: dc1cb98b6529bb4b39b29f65dd755163
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    BinanceSmartChainNetwork:
+      value:
+        id: NW-123-456-7
+        name: Mainnet
+        project: PR-123-456
+        protocol: bsc
+        configuration:
+          network: bsc-mainnet
+        details: {}
+        status: ok
+        nodes:
+          - id: ND-123-456-789
+            name: My Binance Smart Chain node
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration:
+              archive: true
+            details:
+              mode: archive
+              version: 1.0.6
+              api_namespaces:
+                - net
+                - eth
+                - web3
+                - txpool
+                - debug
+                - parlia
+              graphql_endpoint: 'https://nd-123-456-789.p2pify.com/graphql'
+              https_endpoint: 'https://nd-123-456-789.p2pify.com'
+              wss_endpoint: 'wss://ws-nd-123-456-789.p2pify.com'
+              auth_username: user-name
+              auth_password: pass-word-pass-word-pass-word
+              auth_key: dc1cb98b6529bb4b39b29f65dd755163
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    BitcoinNetwork:
+      value:
+        id: NW-123-456-7
+        name: Bitcoin mainnet
+        project: PR-123-456
+        protocol: bitcoin
+        configuration:
+          network: bitcoin-mainnet
+        details: {}
+        status: ok
+        nodes:
+          - id: ND-123-456-789
+            name: My Bitcoin node
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: shared
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration: {}
+            details:
+              version: 0.19.0.1
+              https_endpoint: 'https://nd-123-456-789.p2pify.com'
+              auth_username: user-name
+              auth_password: pass-word-pass-word-pass-word
+              auth_key: dc1cb98b6529bb4b39b29f65dd755163
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    CordaPublicNetwork:
+      value:
+        id: NW-123-456-7
+        name: Corda Pre-Production Network
+        project: PR-123-456
+        protocol: corda
+        configuration:
+          network: corda-network-uat
+        details: {}
+        status: ok
+        nodes:
+          - id: ND-123-456-789
+            name: My Corda pre-production node
+            network: NW-123-456-7
+            organization: RG-123-456
+            type: dedicated
+            role: peer
+            provider: gcloud
+            region: asia-southeast1
+            status: running
+            configuration:
+              identity: ID-123-456-7
+            details:
+              version: 4.4
+              legal_name: 'OU=Chainstack,C=SG,L=Singapore,O=Chainstack'
+              rpc_hostname: nd-003-319-498.rg-855-124.p2pify.com
+              rpc_port: 10201
+              rpc_username: user-name
+              rpc_password: pass-word-pass-word-pass-word
+            created_at: 2020-06-15T07:38:00.747Z
+            creator:
+              id: UR-111-111-111
+              email: john.smith@example.com
+              first_name: John
+              last_name: Smith
+              organization:
+                id: RG-123-456
+                name: My organization
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    FabricNodeCreate:
+      value:
+        name: My Hyperledger Fabric node
+        network: NW-123-456-7
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        configuration: {}
+    CordaNodeCreate:
+      value:
+        name: My Corda node
+        network: NW-123-456-7
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        configuration: {}
+    QuorumNodeCreate:
+      value:
+        name: My Quorum node
+        network: NW-123-456-7
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        configuration: {}
+    MultiChainNodeCreate:
+      value:
+        name: My MultiChain node
+        network: NW-123-456-7
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        configuration: {}
+    EthereumNodeCreate:
+      value:
+        name: My Ethereum node
+        network: NW-123-456-7
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        configuration:
+          archive: true
+    PolygonPoSNodeCreate:
+      value:
+        name: My Polygon PoS node
+        network: NW-123-456-7
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        configuration:
+          archive: true
+    BinanceSmartChainNodeCreate:
+      value:
+        name: My Binance Smart Chain node
+        network: NW-123-456-7
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        configuration:
+          archive: true
+    BitcoinNodeCreate:
+      value:
+        name: My Bitcoin node
+        network: NW-123-456-7
+        type: shared
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        configuration: {}
+    CordaPublicNodeCreate:
+      value:
+        name: My Corda Network node
+        network: NW-123-456-7
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        configuration:
+          identity: ID-123-456-7
+    FabricNode:
+      value:
+        id: ND-123-456-789
+        name: My Hyperledger Fabric node
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration: {}
+        details:
+          version: 2.2.0
+          configuration:
+            - Anchor
+            - Committer
+          name: nd-123-456-789.rg-123-456.p2pify.com
+          rpc_endpoint: 'grpcs://nd-123-456-789.rg-123-456.p2pify.com:7051'
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    FabricOrdererNode:
+      value:
+        id: ND-123-456-789
+        name: Orderer
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: orderer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration: {}
+        details:
+          version: 2.2.0
+          name: nd-123-456-780.rg-123-456.p2pify.com
+          rpc_endpoint: 'grpcs://nd-123-456-780.rg-123-456.p2pify.com:7050'
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    CordaNode:
+      value:
+        id: ND-123-456-789
+        name: My Corda node
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration: {}
+        details:
+          version: 4.4
+          legal_name: >-
+            OU=RG-123-456-ND-123-456-789,O=RG-123-456,C=SG,L=Singapore,ST=Singapore
+          rpc_hostname: nd-003-319-498.rg-855-124.p2pify.com
+          rpc_port: 10201
+          rpc_username: user-name
+          rpc_password: pass-word-pass-word-pass-word
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    CordaNMSNode:
+      value:
+        id: ND-123-456-789
+        name: Network Map Service
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: nms
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration: {}
+        details:
+          version: 0.5.1
+          url: 'https://nd-123-456-780.p2pify.com'
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    CordaNotaryNode:
+      value:
+        id: ND-123-456-789
+        name: Notary
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: notary
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration: {}
+        details:
+          version: 4.4
+          legal_name: >-
+            OU=RG-123-456-ND-123-456-781,O=RG-123-456,C=SG,L=Singapore,ST=Singapore
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    QuorumNode:
+      value:
+        id: ND-123-456-789
+        name: My Quorum node
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration: {}
+        details:
+          version: 2.6.0
+          api_namespaces:
+            - admin
+            - net
+            - eth
+            - web3
+            - personal
+            - txpool
+            - debug
+            - quorum
+            - raft
+          https_endpoint: 'https://nd-123-456-789.p2pify.com'
+          tm: tessera
+          tm_version: 0.10.5
+          tm_endpoint: 'https://tm-api-nd-123-456-789.p2pify.com'
+          tm_enclave_public_key: gixjsQ+57spb/Wu9VyGXqAnuF2ynzlKTJnOsxdW8inQ=
+          tm_enclave_private_key: Rapd21ZH+Ht5zm2x9WQoXmZc6C8CoxxW1mSpMlBXphY=
+          wallet_address: 9.974272899093901e+47
+          wallet_public_key: >-
+            99755718e0a6e40c66e48f6101107b615d1ef12e4c4819d13998aad538b0305b6e637aa0d91394edc6f398d4d87db4341952edfbec918fd2ccc297b668029483
+          wallet_private_key: 5506a1103c51e4c03f2e43872607f98c009ad8515a988d4c7d75343638f0dca7
+          auth_username: user-name
+          auth_password: pass-word-pass-word-pass-word
+          auth_key: dc1cb98b6529bb4b39b29f65dd755163
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    MultiChainNode:
+      value:
+        id: ND-123-456-789
+        name: My MultiChain node
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration: {}
+        details:
+          version: 2.0.3
+          https_endpoint: 'https://nd-123-456-789.p2pify.com'
+          auth_username: user-name
+          auth_password: pass-word-pass-word-pass-word
+          wallet_address: 1GFrdqKYgnix4T4mE1QJszDQowHCmTFqYYQ6Yg
+          wallet_public_key: 02d8c2813ad73b1a692648d0ee2e5dca92238f8e85deb07427c79c21c0d616d78b
+          wallet_private_key: VEaiqGnqwSiAuoeqLJVHZwJNSPgyx5XfXxfYNwxfLLRoDmh2pC8gaATV
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    EthereumNode:
+      value:
+        id: ND-123-456-789
+        name: My Ethereum archive node
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration:
+          archive: true
+        details:
+          mode: archive
+          version: 1.9.9
+          api_namespaces:
+            - net
+            - eth
+            - web3
+            - txpool
+            - debug
+          graphql_endpoint: 'https://nd-123-456-789.p2pify.com/graphql'
+          https_endpoint: 'https://nd-123-456-789.p2pify.com'
+          wss_endpoint: 'wss://ws-nd-123-456-789.p2pify.com'
+          auth_username: user-name
+          auth_password: pass-word-pass-word-pass-word
+          auth_key: dc1cb98b6529bb4b39b29f65dd755163
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    PolygonPoSNode:
+      value:
+        id: ND-123-456-789
+        name: My Polygon PoS archive node
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration:
+          archive: true
+        details:
+          mode: archive
+          version: 1.0.6
+          api_namespaces:
+            - net
+            - eth
+            - web3
+            - txpool
+            - debug
+            - parlia
+          graphql_endpoint: 'https://nd-123-456-789.p2pify.com/graphql'
+          https_endpoint: 'https://nd-123-456-789.p2pify.com'
+          wss_endpoint: 'wss://ws-nd-123-456-789.p2pify.com'
+          auth_username: user-name
+          auth_password: pass-word-pass-word-pass-word
+          auth_key: dc1cb98b6529bb4b39b29f65dd755163
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    BinanceSmartChainNode:
+      value:
+        id: ND-123-456-789
+        name: My Binance Smart Chain archive node
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration:
+          archive: true
+        details:
+          mode: archive
+          version: 1.0.6
+          api_namespaces:
+            - net
+            - eth
+            - web3
+            - txpool
+            - debug
+            - parlia
+          graphql_endpoint: 'https://nd-123-456-789.p2pify.com/graphql'
+          https_endpoint: 'https://nd-123-456-789.p2pify.com'
+          wss_endpoint: 'wss://ws-nd-123-456-789.p2pify.com'
+          auth_username: user-name
+          auth_password: pass-word-pass-word-pass-word
+          auth_key: dc1cb98b6529bb4b39b29f65dd755163
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    BitcoinNode:
+      value:
+        id: ND-123-456-789
+        name: My Bitcoin node
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: shared
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration: {}
+        details:
+          version: 0.19.0.1
+          https_endpoint: 'https://nd-123-456-789.p2pify.com'
+          auth_username: user-name
+          auth_password: pass-word-pass-word-pass-word
+          auth_key: dc1cb98b6529bb4b39b29f65dd755163
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    CordaPublicNode:
+      value:
+        id: ND-123-456-789
+        name: My Corda Network node
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: peer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration:
+          identity: ID-123-456-7
+        details:
+          version: 4.4
+          legal_name: 'OU=Chainstack,C=SG,L=Singapore,O=Chainstack'
+          rpc_hostname: nd-123-456-789.rg-123-456.p2pify.com
+          rpc_port: 10201
+          rpc_username: user-name
+          rpc_password: pass-word-pass-word-pass-word
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    ExplorerNode:
+      value:
+        id: ND-123-456-789
+        name: Explorer
+        network: NW-123-456-7
+        organization: RG-123-456
+        type: dedicated
+        role: explorer
+        provider: gcloud
+        region: asia-southeast1
+        status: running
+        configuration: {}
+        details:
+          url: 'https://nd-123-456-789.p2pify.com'
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    CordaPublicIdentityCreate:
+      value:
+        name: Acme
+        protocol: corda
+        configuration:
+          issuer: corda-network-uat
+          node_operator_email: chainstack@example.com
+          legal_name: 'OU=Acme,C=SG,L=Singapore,O=Acme'
+    CordaPublicIdentity:
+      value:
+        id: ID-123-456-7
+        name: Acme
+        organization: RG-123-456
+        protocol: corda
+        configuration:
+          issuer: corda-network-uat
+          node_operator_email: chainstack@example.com
+          legal_name: 'OU=Acme,C=SG,L=Singapore,O=Acme'
+        details:
+          keystore_password: gaffe-clasp-copier-uneasy-comic-liver
+          truststore_password: trustpass
+        status: approved
+        rejection_reason: ''
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+    RejectedCordaPublicIdentity:
+      value:
+        id: ID-123-456-7
+        name: Acme
+        organization: RG-123-456
+        protocol: corda
+        configuration:
+          issuer: corda-network-uat
+          node_operator_email: chainstack@example.com
+          legal_name: 'OU=Acme,C=SG,L=Singapore,O=Acme'
+        details: {}
+        status: rejected
+        rejection_reason: Duplicate legal name.
+        created_at: 2020-06-15T07:38:00.747Z
+        creator:
+          id: UR-111-111-111
+          email: john.smith@example.com
+          first_name: John
+          last_name: Smith
+          organization:
+            id: RG-123-456
+            name: My organization
+  responses:
+    ValidationError:
+      description: Validation error.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: A string indicating the kind of error.
+                  message:
+                    type: string
+                    description: A human-readable description of the error.
+                  fields:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+                    description: Optional. Field-level validation errors.
+    NotFoundError:
+      description: >-
+        Object does not exist or caller has insufficient permissions to access
+        it.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: A string indicating the kind of error.
+                  message:
+                    type: string
+                    description: A human-readable description of the error.
+servers:
+  - url: 'https://api.chainstack.com'
+    description: API endpoint
